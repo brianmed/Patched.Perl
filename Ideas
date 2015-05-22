@@ -1,0 +1,69 @@
+Some lifted from Slaughter and Rex
+
+Globals
+
+archEither i386 or amd64, depending upon the type of the system.
+bits32 or 64 depending on the client system.
+domainThe domain portion of the hostname.
+fqdnThe fully qualified (long) hostname of the client system.
+hostnameThe short (unqualified) hostname of the client system.
+kernelThe version of the kernel running upon the client system.
+
+Modules
+
+Apache
+Email
+Twilio
+Cron
+    Add
+    List
+    Delete
+User
+    Add
+    Info
+    Delete
+Group
+Command
+Fetch
+Logrotate
+Process
+    Kill
+    Nice
+Processes
+    Kill
+    Nice
+    List
+    Find
+File
+    Find
+    Matches/Contains
+    Compare
+    Copy
+    Move
+    Rename
+    Permissions
+    Delete
+    Exist
+    SetPermission
+    ReplaceRegexp
+    ReplaceLine
+    Append
+    Contains
+Files (a set)
+    Delete
+    Move
+    Permissions
+    Exist
+Packages
+    Update all
+Package
+    Install
+    Remove
+    Update
+    Query
+Device
+Mount
+Mounts
+Log
+    File
+    SysLog
