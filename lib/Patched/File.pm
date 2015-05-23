@@ -4,7 +4,7 @@ use Mojo::Base -strict;
 
 use autodie;
 use Moose;
-use Mojo::Util qw(spurt slurp);
+use Mojo::Util;
 
 use experimental qw(signatures);
 
@@ -29,11 +29,11 @@ sub match ($this, $string) {
 }
 
 sub spurt ($this, $path, $contents) {
-    return spurt($contents, $path);
+    return Mojo::Util::spurt($contents, $path);
 }
 
 sub slurp ($this, $path) {
-    return slurp($path);
+    return Mojo::Util::slurp($path);
 }
 
 1;

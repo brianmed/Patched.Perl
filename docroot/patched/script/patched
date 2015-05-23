@@ -1,0 +1,26 @@
+#!/opt/Patched/perl
+
+use strict;
+use warnings;
+
+use lib 'lib';
+use lib '/opt/Patched/lib';
+
+use Patched::Globals;
+use Patched::File;
+
+my $InstallDir = $Patched::Globals::InstallDir;
+
+if (!-d $InstallDir || !-f "$InstallDir/config") {
+    say("Please run '$0 patched deploy'");
+
+    exit;
+}
+
+if (@ARGV) {
+    Patched::File->spurt($$, "$InstallDir/pids/agent.pid");
+}
+
+# Start command line interface for application
+require Mojolicious::Commands;
+Mojolicious::Commands->start_app('Patched');
