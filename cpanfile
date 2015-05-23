@@ -6,3 +6,5 @@ requires 'Minion::Backend::Pg', 0;
 requires 'DBI', 0;
 requires 'DBD::Pg', 0;
 requires 'Mojo::Pg', 0;
+requires 'Net::SFTP::Foreign', 0;
+requires 'IO::Pty', 0;
