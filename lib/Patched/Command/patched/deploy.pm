@@ -1,4 +1,4 @@
-package Patched::Command::patched::deplay;
+package Patched::Command::patched::deploy;
 
 use autodie;
 
@@ -15,6 +15,7 @@ use File::Temp qw(tempfile);
 use Patched::Globals;
 use Patched::File;
 use Patched::Bcrypt;
+use Patched::Command;
 
 has description => 'Deploy Patched';
 has usage => sub { shift->extract_usage };
@@ -35,7 +36,7 @@ sub run {
       'config_dbi_pass=s' => \my $dbi_pass,
       'boot'     => \my $boot;
 
-    unless ($method =~ m/^(sftp)$/i) {
+    unless ($method && $method =~ m/^(sftp)$/i) {
         die("Please specify -method.\n");
     }
 
@@ -81,7 +82,7 @@ sub run {
     }
 
     say("[sftp mkpath] $InstallDir");
-    $sftp->mkpath($Installdir)
+    $sftp->mkpath($InstallDir);
 
     my @t0 = @{[Time::HiRes::gettimeofday]};
 
@@ -91,12 +92,12 @@ sub run {
     };
 
     if ("minion" eq $type) {
-        if (!$config_dbi_user || !$config_dbi_pass) {
+        if (!$dbi_user || !$dbi_pass) {
             die("Need -config_dbi_user and -config_dbi_pass\n");
         }
 
-        $json->{dbi_user} = $config_dbi_user;
-        $json->{dbi_pass} = $config_dbi_pass;
+        $json->{dbi_user} = $dbi_user;
+        $json->{dbi_pass} = $dbi_pass;
     }
 
     my ($fh, $config) = tempfile("patched_XXXXXX", TMPDIR => 1);
@@ -106,7 +107,7 @@ sub run {
     seek($fh, 0, 0);
 
     say("[sftp put] $InstallDir/config");
-    $sftp->put($fh, "$Installdir/config")
+    $sftp->put($fh, "$InstallDir/config");
 
     unless ($boot) {
         return;
