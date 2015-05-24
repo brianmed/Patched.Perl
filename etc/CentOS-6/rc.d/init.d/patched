@@ -11,20 +11,42 @@
 # chkconfig: 345 99 99
 
 . /etc/init.d/functions
+. /etc/sysconfig/network
 
 PIDFILE="/opt/Patched/pids/agent.pid"
 prog="patched"
 exec="/opt/Patched/docroot/patched/script/patched"
 
 start() {
-	# Check that networking is configured.
-	[ ${NETWORKING} = "no" ] && exit 1
+    if [ "$NETWORKING" = "no" ]; then
+        echo -n $"Networking doesn't seem to be configured:"
+        failure $"Networking doesn't seem to be configured:"
+        echo
+        return 1
+    fi
+
+    pidofproc -p "$PIDFILE" "$exec" > /dev/null
+    if [ "0" -eq "$?" ]; then
+        echo -n $"Patched is running:"
+        warning $"Patched is running:"
+        echo
+        return 1
+    fi
 
 	echo -n $"Starting Patched web/api: "
-    daemon --pidfile="$PIDFILE" /opt/Patched/perl/bin/perl $exec daemon -l 'http://*:6000'
+    cd /opt/Patched/docroot/patched
+    nohup /opt/Patched/perl $exec daemon -l 'http://*:6000' > /dev/null 2>/dev/null &
     RETVAL=$?
-	echo
-	return $RETVAL
+
+    if [ "0" -eq "$RETVAL" ]; then
+        success $"Patched started:"
+        echo
+        return 0
+    else
+        failure $"Patched not started:"
+        echo
+        return $RETVAL
+    fi
 }
 
 stop() {
