@@ -12,27 +12,25 @@
 
 . /etc/init.d/functions
 
+PIDFILE="/opt/Patched/pids/agent.pid"
+prog="patched"
+exec="/opt/Patched/docroot/patched/script/patched"
+
 start() {
 	# Check that networking is configured.
 	[ ${NETWORKING} = "no" ] && exit 1
 
 	echo -n $"Starting Patched web/api: "
-    daemon /opt/Patched/perl/bin/perl /opt/Patched/patched.pl daemon -l 'http://*:6000'
+    daemon --pidfile="$PIDFILE" /opt/Patched/perl/bin/perl $exec daemon -l 'http://*:6000'
     RETVAL=$?
 	echo
 	return $RETVAL
 }
 
 stop() {
-	echo -n $"Shutting down router discovery services: "
-	if [ $UID -ne 0 ]; then
-                RETVAL=4
-                failure
-        else
-        	killproc /sbin/rdisc
-		RETVAL=$?
-	        [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
-        fi;
+	echo -n $"Shutting down Patched: "
+    killproc -p "$PIDFILE" $exec
+    RETVAL=$?
 	echo
 	return $RETVAL
 }
@@ -53,16 +51,10 @@ case "$1" in
 	stop
 	;;
   status)
-	status rdisc
+	status -p "$PIDFILE" -l $prog $exec
 	;;
   restart|reload)
 	restart
-	;;
-  condrestart)
-	if status $prog > /dev/null; then
-	    stop
-	    start
-	fi
 	;;
   *)
 	echo $"Usage: $0 {start|stop|status|restart|reload}"

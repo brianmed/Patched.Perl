@@ -7,5 +7,6 @@ requires 'DBI', 0;
 requires 'DBD::Pg', 0;
 requires 'Mojo::Pg', 0;
 requires 'Net::SFTP::Foreign', 0;
+requires 'Net::OpenSSH', 0;
 requires 'IO::Pty', 0;
 requires 'Crypt::Eksblowfish::Bcrypt', 0;

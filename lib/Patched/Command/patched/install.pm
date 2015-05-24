@@ -76,14 +76,14 @@ L<Mojolicious::Command> and implements the following new ones.
 =head2 description
 
   my $description = $install->description;
-  $install            = $install->description('Foo');
+  $install        = $install->description('Foo');
 
 Short description of this command, used for the command list.
 
 =head2 usage
 
   my $usage = $install->usage;
-  $install      = $install->usage('Foo');
+  $install  = $install->usage('Foo');
 
 Usage information for this command, used for the help screen.
 

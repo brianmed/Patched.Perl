@@ -9,7 +9,7 @@ use Mojo::Date;
 use Mojo::JSON 'encode_json';
 use Mojo::Util qw(spurt sha1_sum);
 use Time::HiRes;
-use Net::SFTP::Foreign;
+use Net::OpenSSH;
 use File::Temp qw(tempfile);
 
 use Patched::Globals;
@@ -31,51 +31,49 @@ sub run {
       'port=s'   => \my $port,
       'method=s' => \my $method,
       'type=s'   => \my $type,
-      'secret=s' => \my $secret,
+      'api_key=s' => \my $api_key,
       'config_dbi_user=s' => \my $dbi_user,
       'config_dbi_pass=s' => \my $dbi_pass,
       'boot'     => \my $boot;
 
-    unless ($method && $method =~ m/^(sftp)$/i) {
+    unless ($method) {
+        say $self->usage;
         die("Please specify -method.\n");
     }
 
     unless ($host) {
+        say $self->usage;
         die("Please specify -host.\n");
     }
 
-    my %args = (
-        host => $host,
-        autodie => 1,
-    );
+    unless ($api_key) {
+        say $self->usage;
+        die("Please specify -api_key.\n");
+    }
 
-    $args{user} = $user if $user;
-    $args{pass} = $pass if $pass;
-    $args{port} = $port if $port;
+    unless ($method =~ m/^(ssh|local)$/) {
+        say $self->usage;
+        die("Please specify ssh or local for -method.\n");
+    }
 
-    say("[sftp connect] $host");
-    my $sftp = Net::SFTP::Foreign->new(%args);
-    $sftp->die_on_error("Unable to establish SFTP connection: $host");
+    $host //= 22;
+    $type //= "standalone";
+
+    say("[ssh2 connect] $host");
+
+    my $ssh2 = Net::OpenSSH->new(host => $host, user => $user, password => $pass, port => $port, master_opts => [-o => "StrictHostKeyChecking=no"]);
 
     say("[verify supported OS] $host");
-    my $not_found = 0;
-    $sftp->find("/etc/centos-release", on_error => sub { $not_found = 1 });
-    if ($not_found) {
+    my $verify = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "test -f /etc/centos-release && grep 'CentOS release 6' /etc/centos-release") or die("verify failed: " . $ssh2->error);
+    unless ($verify) {
         die("We only support CentOS right now.\n");
     }
 
-    my (undef, $release) = tempfile("patched_XXXXXX", TMPDIR => 1, UNLINK => 0);
-    $sftp->get("/etc/centos-release", $release);
-
-    my $file = Patched::File->new(path => $release);
-    unless ($file->match("CentOS release 6")) {
-        die("We only support CentOS 6 right now.\n");
-    }
-
+    my $sftp = $ssh2->sftp;
     my $InstallDir = $Patched::Globals::InstallDir;
 
     say("[sftp check previous install] $host");
-    $not_found = 0;
+    my $not_found = 0;
     $sftp->find($InstallDir, on_error => sub { $not_found = 1 });
     unless ($not_found) {
         die("Install directory '$InstallDir' exists.\n");
@@ -89,6 +87,7 @@ sub run {
     my $json = {
         secret => { current => sha1_sum("$t0[0].$t0[1]"), whence => $t0[0] },
         type => $type,
+        api_key => $api_key,
     };
 
     if ("minion" eq $type) {
@@ -109,7 +108,22 @@ sub run {
     say("[sftp put] $InstallDir/config");
     $sftp->put($fh, "$InstallDir/config");
 
+    say("[sftp put] $InstallDir/CentOS-6.6-perl-5.20.2.tar.gz");
+    $sftp->put("dist/CentOS-6.6-perl-5.20.2.tar.gz", "$InstallDir/CentOS-6.6-perl-5.20.2.tar.gz");
+    say("[sftp symlink] $InstallDir/perl-5.20.2/bin/perl -> $InstallDir/perl");
+    $sftp->symlink("$InstallDir/perl" => "$InstallDir/perl-5.20.2/bin/perl");
+
+    say("[sftp system] cd $InstallDir && tar -zxvf CentOS-6.6-perl-5.20.2.tar.gz");
+    my $install = $ssh2->system({timeout => 120, stderr_discard => 1, stdin_discard => 1, stdout_discard => 1}, "cd $InstallDir && tar -zxf CentOS-6.6-perl-5.20.2.tar.gz") or die("install failed: " . $ssh2->error);
+    unless ($install) {
+        die("We only support CentOS right now.\n");
+    }
+
+    say("[sftp remove] $InstallDir/CentOS-6.6-perl-5.20.2.tar.gz");
+    $sftp->remove("$InstallDir/CentOS-6.6-perl-5.20.2.tar.gz");
+
     unless ($boot) {
+        say("[SUCCESS installed]");
         return;
     }
 }
@@ -130,11 +144,14 @@ Patched::Command::patched::deploy - Deploy Patched
 
   Options:
     --host <name>     Hostname to deploy to
-    --user <name>     Hostname to deploy to
-    --pass <secret>   Hostname to deploy to
-    --port <number>   Hostname to deploy to
-    --method <type>   File transfer method [ssh]
+    --user <user>     Username for ssh
+    --pass <secret>   Password for ssh
+    --port <number>   Port for ssh
+    --method <type>   Install mode [ssh|local]
     --type <mode>     Type of install [standalone|minion]
+    --api_key <key>   Password for remote agent
+    --config_dbi_user <user>   Username for DBI [used with minion]
+    --config_dbi_pass <pass>   Password for DBI [used with minion]
     --boot            Start Patched on boot
 
 =head1 DESCRIPTION
