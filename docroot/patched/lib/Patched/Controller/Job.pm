@@ -1,4 +1,4 @@
-package CallsAbound::Controller::API;
+package Patched::Controller::Job;
 
 use Mojo::Base 'Mojolicious::Controller';
 
@@ -11,17 +11,14 @@ sub run {
 
     $c->inactivity_timeout(300);
 
-    my $code = $c->req->json->{script};
-    
+    my $code = $c->req->json->{code};
     my $script = $Patched::Globals::Preamble . $code;
+    my $file = Patched::File->tmp({ contents => $script});
+    $c->app->log->debug("file: $file");
 
-    my $file = Patched::File->tmp;
+    my $cmd = Patched::Command->new(cmd => $Patched::Globals::Perl, args => $file)->run;
 
-    my $perl = $Patched::Globals::Perl;
-
-    my $cmd = Patched::Command->new(cmd => $perl, args => $file)->run;
-
-    return($c->render(json => {status => $cmd->success}));
+    return($c->render(json => {success => $cmd->success}));
 }
 
 1;

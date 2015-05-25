@@ -15,13 +15,41 @@ sub run {
     
     my ($args, $options) = ([], {});
     GetOptionsFromArray \@args,
-      'e|enqueue=s'  => \my $enqueue,
-      'f|file'       => \my $file;
+      'run=s'      => \my $run,
+      'enqueue=s'  => \my $enqueue,
+      'api_key=s'  => \my $api_key,
+      'script=s'     => \my $script;
     
-    # Enqueue
+    if ($enqueue && $run) {
+        $self->usage;
+        die("Please don't specify -run and -enqueue.\n");
+    }
+
     if ($enqueue) {
-        my $bytes = encode_json(slurp($file));
+        my $bytes = encode_json(slurp($script));
         $self->app->minion->enqueue($enqueue, $bytes, $options)
+    }
+
+    if ($run) {
+        use Mojo::UserAgent;
+        use Mojo::URL;
+
+        my $ua = Mojo::UserAgent->new;
+
+        my $url = Mojo::URL->new("http://$run:6000/api/v1/job/run");
+        my $tx = $ua->post($url, => json => { code => slurp($script), api_key => $api_key });
+
+        if ($tx->success) {
+            if ($tx->res->json->{success}) {
+                say("Job was successful");
+            }
+            else {
+                say("Job fail: " . $tx->res->json->{data}{message});
+            }
+        }
+        else {
+            say(sprintf("Error [%s]: %s", $tx->error->{code} // "0", $tx->error->{message}));
+        }
     }
 }
 
@@ -40,8 +68,10 @@ Patched::Command::patched::job - Patched job command
     ./patched.pl patched job -e foo -f foo.pl
 
   Options:
-    -e, --enqueue <name>      New job to be enqueued
-    -l, --file <filename>     Filename to load
+    --run <host>          Host to run job on
+    --api_key <key>       Password for remote agent
+    --enqueue <name>      New job to be enqueued
+    --script <filename>   Filename to load
 
 =head1 DESCRIPTION
 

@@ -3,6 +3,7 @@ package Patched;
 use Mojo::Base 'Mojolicious';
 
 use Patched::Globals;
+use Patched::Bcrypt;
 
 sub api_key
 {
@@ -32,18 +33,18 @@ sub startup {
     my $api = $r->under (sub {
         my $self = shift;
 
-        return($self->render(json => {status => "error", data => { message => "No JSON found" }})) unless $self->req->json;
+        return($self->render(json => {success => 0, data => { message => "No JSON found" }})) unless $self->req->json;
 
         my $api_key = $self->req->json->{api_key};
 
         unless ($api_key) {
-            $self->render(json => {status => "error", data => { message => "No API Key found" }});
+            $self->render(json => {success => 0, data => { message => "No API Key found" }});
 
             return undef;
         }
 
-        unless ($api_key eq $self->api_key) {
-            $self->render(json => {status => "error", data => { message => "Credentials mis-match" }});
+        unless (Patched::Bcrypt->check_password($api_key, $self->api_key)) {
+            $self->render(json => {success => 0, data => { message => "Credentials mis-match" }});
 
             return undef;
         }

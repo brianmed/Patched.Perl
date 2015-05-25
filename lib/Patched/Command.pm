@@ -5,7 +5,7 @@ use Mojo::Base -strict;
 use experimental qw(signatures);
 
 use Moose;
-use IPC::Run;
+use IPC::Run qw();
 
 has 'cmd' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
 has 'args' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
@@ -21,13 +21,12 @@ sub run ($this) {
     if (!ref $this->{cmd}) {
         my @cmd = ($this->{cmd});
 
-        my @args = ();
-
         if (!ref $this->{args}) {
-            push(@args, $this->{args});
+            push(@cmd, $this->{args});
         }
 
-        my $ret = IPC::Run(\@cmd, \undef, \undef, \undef);
+        my ($in, $out, $err);
+        my $ret = IPC::Run::run(\@cmd, \$in, \$out, \$err);
         $this->child_error($?);
         $this->ret($ret);
 
@@ -44,10 +43,6 @@ sub run ($this) {
 
         return $this;
     }
-}
-
-sub success ($this) {
-    return 1 if $this->ret;
 }
 
 sub find ($this, $exe) {

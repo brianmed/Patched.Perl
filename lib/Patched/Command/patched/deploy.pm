@@ -63,11 +63,10 @@ sub run {
         die("Please don't specify -start without -boot.\n");
     }
 
-    $host //= 22;
+    $port //= 22;
     $type //= "standalone";
 
     say("[ssh2 connect] $host");
-
     my $ssh2 = Net::OpenSSH->new(host => $host, user => $user, password => $pass, port => $port, master_opts => [-o => "StrictHostKeyChecking=no"]);
 
     say("[verify supported OS] $host");

@@ -14,19 +14,19 @@ has 'path' => (is => 'ro', isa => 'Str');
 sub match ($this, $string) {
     open(my $fh, "<", $this->path);
 
-    my $matched = 0;
     my $qr = qr/$string/;
+    my $line = "";
 
     while (<$fh>) {
         if (/$qr/) {
-            $matched = 1;
+            $line = $_;
             last;
         }
     }
 
     close($fh);
 
-    return $matched;
+    return $line;
 }
 
 sub spurt ($this, $path, $contents) {
@@ -40,7 +40,11 @@ sub slurp ($this, $path) {
 sub tmp ($this, $ops) {
     my ($fh, $filename) = tempfile("patched_tmp_XXXXXX", TMPDIR => 1 );
 
-    if ($ops && $ops{fh}) {
+    if ($$ops{contents}) {
+        print($fh $$ops{contents});
+    }
+
+    if ($ops && $$ops{fh}) {
         return($fh, $filename);
     }
     

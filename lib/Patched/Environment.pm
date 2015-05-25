@@ -5,7 +5,7 @@ use Mojo::Base -strict;
 use autodie;
 use Moose;
 use Carp;
-use POSIX qw(uname);
+use POSIX qw();
 
 use experimental qw(signatures);
 
@@ -52,3 +52,5 @@ sub version ($this) {
 
     croak("Unsupported");
 }
+
+1;

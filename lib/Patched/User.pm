@@ -24,7 +24,7 @@ sub add ($this, $name) {
         croak("Unsupported");
     }
 
-    unless ($main::Version =~ m/^6/) {
+    unless ($main::DistroVer =~ m/^6/) {
         croak("Unsupported");
     }
 
@@ -36,3 +36,5 @@ sub add ($this, $name) {
 
     return Patched::Command->new(cmd => $adduser, args => "bpm")->run->success;
 }
+
+1;
