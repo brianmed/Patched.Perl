@@ -18,31 +18,35 @@ has 'autodie' => (is => 'rw', isa => 'Bool', default => 1);
 has 'success' => (is => 'rw', isa => 'Bool');
 
 sub run ($this) {
+    my @cmd = ();
+
     if (!ref $this->{cmd}) {
-        my @cmd = ($this->{cmd});
-
-        if (!ref $this->{args}) {
-            push(@cmd, $this->{args});
-        }
-
-        my ($in, $out, $err);
-        my $ret = IPC::Run::run(\@cmd, \$in, \$out, \$err);
-        $this->child_error($?);
-        $this->ret($ret);
-
-        if ($this->autodie) {
-            croak("$cmd[0]: $?") unless $ret;
-        }
-
-        if ($ret) {
-            $this->success(1);
-        }
-        else {
-            $this->success(0);
-        }
-
-        return $this;
+        @cmd = ($this->{cmd});
     }
+    elsif ("ARRAY" eq ref $this->{cmd}) {
+    }
+
+    if (!ref $this->{args}) {
+        push(@cmd, $this->{args});
+    }
+
+    my ($in, $out, $err);
+    my $ret = IPC::Run::run(\@cmd, \$in, \$out, \$err);
+    $this->child_error($?);
+    $this->ret($ret);
+
+    if ($this->autodie) {
+        croak("$cmd[0]: $?") unless $ret;
+    }
+
+    if ($ret) {
+        $this->success(1);
+    }
+    else {
+        $this->success(0);
+    }
+
+    return $this;
 }
 
 sub find ($this, $exe) {
