@@ -52,6 +52,8 @@ sub run {
         die("Please specify -api_key.\n");
     }
 
+    $api_key = Patched::Bcrypt->hash_password($api_key);
+
     unless ($method =~ m/^(ssh|local)$/) {
         say $self->usage;
         die("Please specify ssh or local for -method.\n");

@@ -5,6 +5,7 @@ use Mojo::Base -strict;
 use autodie;
 use Moose;
 use Mojo::Util;
+use File::Temp qw(tempfile);
 
 use experimental qw(signatures);
 
@@ -34,6 +35,16 @@ sub spurt ($this, $path, $contents) {
 
 sub slurp ($this, $path) {
     return Mojo::Util::slurp($path);
+}
+
+sub tmp ($this, $ops) {
+    my ($fh, $filename) = tempfile("patched_tmp_XXXXXX", TMPDIR => 1 );
+
+    if ($ops && $ops{fh}) {
+        return($fh, $filename);
+    }
+    
+    return($filename);
 }
 
 1;
