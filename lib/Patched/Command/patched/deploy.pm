@@ -100,6 +100,9 @@ sub run {
     say("[sftp mkpath] $InstallDir/pids");
     $sftp->mkpath("$InstallDir/pids") or die("sftp error: " . $sftp->error);
 
+    say("[sftp mkpath] $InstallDir/log");
+    $sftp->mkpath("$InstallDir/log") or die("sftp error: " . $sftp->error);
+
     my @t0 = @{[Time::HiRes::gettimeofday]};
 
     my $json = {

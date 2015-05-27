@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 #######################################################################
-# $ perl install.pl patched deploy
+# $ perl invoke.pl patched deploy
 #######################################################################
 
 use lib qw(lib);

@@ -10,3 +10,4 @@ requires 'Net::SFTP::Foreign', 0;
 requires 'Net::OpenSSH', 0;
 requires 'IO::Pty', 0;
 requires 'Crypt::Eksblowfish::Bcrypt', 0;
+requires 'IO::String', 0;

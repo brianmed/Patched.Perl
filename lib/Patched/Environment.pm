@@ -44,7 +44,10 @@ sub version ($this) {
 
             if ($matched) {
                 if ($matched =~ m/CentOS release ([\d.]+)/) {
-                    return($1);
+                    my $ver = $1;
+
+                    croak("Unsupported") unless $ver =~ m/^6/;
+                    return($ver);
                 }
             }
         }

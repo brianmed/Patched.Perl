@@ -19,9 +19,9 @@ Cron
     List
     Delete
 User
-    Add
-    Info
-    Delete
+    * Add
+    * Info
+    * Delete
 Group
 Command
 Fetch

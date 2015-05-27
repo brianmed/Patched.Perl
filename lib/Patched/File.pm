@@ -6,19 +6,54 @@ use autodie;
 use Moose;
 use Mojo::Util;
 use File::Temp qw(tempfile);
+use IO::String;
 
 use experimental qw(signatures);
 
 has 'path' => (is => 'ro', isa => 'Str');
+has 'str' => (is => 'ro');
 
 sub match ($this, $string) {
-    open(my $fh, "<", $this->path);
+    my $fh;
+
+    if ($this->str) {
+        $fh = IO::String->new($this->str);
+    }
+    else {
+        open($fh, "<", $this->path);
+    }
 
     my $qr = qr/$string/;
-    my $line = "";
+    my $line;
 
     while (<$fh>) {
         if (/$qr/) {
+            $line = $_;
+            last;
+        }
+    }
+
+    close($fh);
+
+    return $line;
+}
+
+sub find ($this, $string) {
+    my $fh;
+
+    if ($this->str) {
+        $fh = IO::String->new($this->str);
+    }
+    else {
+        open($fh, "<", $this->path);
+    }
+
+    my $line;
+
+    while (<$fh>) {
+        chomp;
+
+        if ($string eq $_) {
             $line = $_;
             last;
         }
@@ -40,7 +75,7 @@ sub slurp ($this, $path) {
 sub tmp ($this, $ops) {
     my ($fh, $filename) = tempfile("patched_tmp_XXXXXX", TMPDIR => 1 );
 
-    if ($$ops{contents}) {
+    if ($ops && $$ops{contents}) {
         print($fh $$ops{contents});
     }
 
