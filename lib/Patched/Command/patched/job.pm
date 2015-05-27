@@ -35,6 +35,8 @@ sub run {
         use Mojo::URL;
 
         my $ua = Mojo::UserAgent->new;
+        $ua->inactivity_timeout(3600);
+        $ua->request_timeout(3600);
 
         my $url = Mojo::URL->new("http://$run:6000/api/v1/job/run");
         my $tx = $ua->post($url, => json => { code => slurp($script), api_key => $api_key, name => $script });

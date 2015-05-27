@@ -12,6 +12,7 @@ use Patched::Log;
 
 has 'cmd' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
 has 'args' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
+has 'timeout' => (is => 'rw', isa => 'Int', default => 30);
 has 'ret' => (is => 'rw');
 has 'child_error' => (is => 'rw', isa => 'Str');
 has 'stdin' => (is => 'ro');
@@ -46,7 +47,7 @@ sub run ($this) {
     Patched::Log->info(sprintf("IPC::Run::run(%s): STARTING", join(" ", @cmd)));
 
     my ($in, $out, $err);
-    my $ret = IPC::Run::run(\@cmd, \$in, \$out, \$err);
+    my $ret = IPC::Run::run(\@cmd, \$in, \$out, \$err, IPC::Run::timeout($this->timeout));
     $this->child_error($?);
     $this->ret($ret);
 

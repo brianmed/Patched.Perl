@@ -1,4 +1,4 @@
-package Patched::Command::patched::uninstall;
+package Patched::Command::patched::run;
 
 use autodie;
 
@@ -14,7 +14,7 @@ use Patched::File;
 use Patched::Bcrypt;
 use Patched::Command;
 
-has description => 'Uninstall Patched';
+has description => 'Run a cmd';
 has usage => sub { shift->extract_usage };
 
 sub run {
@@ -25,7 +25,8 @@ sub run {
       'host=s'   => \my $host,
       'user=s'   => \my $user,
       'pass=s'   => \my $pass,
-      'port=s'   => \my $port;
+      'port=s'   => \my $port,
+      'cmd=s'    => \my $cmd;
 
     $port //= 22;
 
@@ -34,9 +35,13 @@ sub run {
         die("Please specify -host.\n");
     }
 
+    unless ($cmd) {
+        say $self->usage;
+        die("Please specify -cmd.\n");
+    }
+
     say("[ssh2 connect] $host");
     my $ssh2 = Net::OpenSSH->new(host => $host, user => $user, password => $pass, port => $port, master_opts => [-o => "StrictHostKeyChecking=no"]);
-    my $sftp = $ssh2->sftp;
 
     say("[verify supported OS] $host");
     my $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "test -f /etc/centos-release && grep 'CentOS release 6' /etc/centos-release") or die("verify failed: " . $ssh2->error);
@@ -44,28 +49,8 @@ sub run {
         die("We only support CentOS right now.\n");
     }
 
-    my $InstallDir = $Patched::Globals::InstallDir;
-
-    say("[sftp check previous install] $host");
-    my $not_found = 0;
-    $sftp->find($InstallDir, on_error => sub { $not_found = 1 });
-    if ($not_found) {
-        die("Install directory '$InstallDir' doesn't exists.\n");
-    }
-
-    say("[stop service]");
-    $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "service patched stop") or die("system failed: " . $ssh2->error);
-
-    say("[remove symlinks]");
-    $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "chkconfig --del patched") or die("system failed: " . $ssh2->error);
-
-    say("[remove service]");
-    $sftp->remove("/etc/rc.d/init.d/patched") or die("sftp error: " . $sftp->error);
-
-    say("[remove $InstallDir]");
-    $sftp->rremove($InstallDir) or die("sftp error: " . $sftp->error);
-
-    say("[SUCCESS uninstalled]");
+    say("[run $cmd]");
+    $system = $ssh2->system({timeout => 30}, $cmd) or die("system failed: " . $ssh2->error);
 }
 
 1;
@@ -74,51 +59,52 @@ sub run {
 
 =head1 NAME
 
-Patched::Command::patched::uninstall - Uninstall Patched
+Patched::Command::patched::run - Run a command
 
 =head1 SYNOPSIS
 
-  Usage: APPLICATION patched uninstall [OPTIONS]
+  Usage: APPLICATION patched run [OPTIONS]
 
-    ./patched.pl patched uninstall
+    ./patched.pl patched run
 
   Options:
-    --host <name>     Hostname to uninstall from
+    --host <name>     Hostname to run on
     --user <user>     Username for ssh
     --pass <secret>   Password for ssh
     --port <number>   Port for ssh
+    --cmd  <string>   Command
 
 =head1 DESCRIPTION
 
-L<Patched::Command::patched::uninstall> uninstall L<Patched>.
+L<Patched::Command::patched::run> run L<Patched>.
 
 =head1 ATTRIBUTES
 
-L<Patched::Command::patched::uninstall> inherits all attributes from
+L<Patched::Command::patched::run> inherits all attributes from
 L<Mojolicious::Command> and implements the following new ones.
 
 =head2 description
 
-  my $description = $uninstall->description;
-  $uninstall      = $uninstall->description('Foo');
+  my $description = $run->description;
+  $run            = $run->description('Foo');
 
 Short description of this command, used for the command list.
 
 =head2 usage
 
-  my $usage  = $uninstall->usage;
-  $uninstall = $uninstall->usage('Foo');
+  my $usage  = $run->usage;
+  $run       = $run->usage('Foo');
 
 Usage information for this command, used for the help screen.
 
 =head1 METHODS
 
-L<Patched::Command::patched::uninstall> inherits all methods from
+L<Patched::Command::patched::run> inherits all methods from
 L<Mojolicious::Command> and implements the following new ones.
 
 =head2 run
 
-  $uninstall->run(@ARGV);
+  $run->run(@ARGV);
 
 Run this command.
 

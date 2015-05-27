@@ -97,6 +97,20 @@ sub del ($this, $entry) {
     return $this;
 }
 
+sub clear ($this) {
+    if (!defined $this->user) {
+        croak("Please pass in a user.\n");
+    }
+
+    my $crontab = Patched::Command->find("crontab") or croak("Unable to find crontab command");
+    my $cmd = Patched::Command->new(cmd => $crontab, args => ["-u", $this->user, "-r"], autodie => 0)->run;
+    unless ($cmd->success || 256 == int($cmd->child_error)) {
+        croak("Unable to clear crontab");
+    }
+
+    return $this;
+}
+
 sub list ($this) {
     if (!defined $this->user) {
         croak("Please pass in a user.\n");
@@ -109,6 +123,7 @@ sub list ($this) {
         croak("Unable to get crontab listing");
     }
 
+    # Should this be converted to an array?
     return ${ $cmd->stdout };
 }
 

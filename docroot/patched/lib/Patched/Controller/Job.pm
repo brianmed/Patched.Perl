@@ -9,7 +9,7 @@ use Patched::File;
 sub run {
     my $c = shift;
 
-    $c->inactivity_timeout(300);
+    $c->inactivity_timeout(3600);
 
     my $code = $c->req->json->{code};
     my $name = $c->req->json->{name};
@@ -17,7 +17,7 @@ sub run {
     my $file = Patched::File->tmp({ contents => $script, suffix => "pl"});
     $c->app->log->debug("file: $file");
 
-    my $cmd = Patched::Command->new(cmd => $Patched::Globals::Perl, args => $file)->run;
+    my $cmd = Patched::Command->new(cmd => $Patched::Globals::Perl, args => $file, timeout => 3600)->run;
 
     return($c->render(json => {success => $cmd->success}));
 }

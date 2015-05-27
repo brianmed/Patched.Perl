@@ -16,6 +16,8 @@ our $Preamble = qq(
     use Patched::Globals;
     use Patched::User;
     use Patched::Log;
+    use Patched::Packages;
+    use Patched::Localhost;
 
     our \$Distro = Patched::Environment->distribution;
     our \$DistroVer = Patched::Environment->version;
