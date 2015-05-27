@@ -18,7 +18,7 @@ if (!-d $InstallDir || !-f "$InstallDir/config") {
 }
 
 if (@ARGV) {
-    Patched::File->spurt("$InstallDir/pids/agent.pid", $$);
+    Patched::File->new(path =>"$InstallDir/pids/agent.pid")->spurt($$);
 }
 
 # Start command line interface for application

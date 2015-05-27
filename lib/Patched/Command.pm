@@ -4,6 +4,7 @@ use Mojo::Base -strict;
 
 use experimental qw(signatures);
 
+use Carp;
 use Moose;
 use IPC::Run qw();
 
@@ -11,7 +12,7 @@ use Patched::Log;
 
 has 'cmd' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
 has 'args' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
-has 'ret' => (is => 'rw', isa => 'Int');
+has 'ret' => (is => 'rw');
 has 'child_error' => (is => 'rw', isa => 'Str');
 has 'stdin' => (is => 'ro', isa => 'ArrayRef[Str]');
 has 'stdout' => (is => 'rw', isa => 'ArrayRef[Str]');

@@ -37,7 +37,7 @@ sub run {
         my $ua = Mojo::UserAgent->new;
 
         my $url = Mojo::URL->new("http://$run:6000/api/v1/job/run");
-        my $tx = $ua->post($url, => json => { code => slurp($script), api_key => $api_key });
+        my $tx = $ua->post($url, => json => { code => slurp($script), api_key => $api_key, name => $script });
 
         if ($tx->success) {
             if ($tx->res->json->{success}) {

@@ -12,8 +12,9 @@ sub run {
     $c->inactivity_timeout(300);
 
     my $code = $c->req->json->{code};
-    my $script = $Patched::Globals::Preamble . $code;
-    my $file = Patched::File->tmp({ contents => $script});
+    my $name = $c->req->json->{name};
+    my $script = $Patched::Globals::Preamble . "\n\n### $name\n\n" .$code;
+    my $file = Patched::File->tmp({ contents => $script, suffix => "pl"});
     $c->app->log->debug("file: $file");
 
     my $cmd = Patched::Command->new(cmd => $Patched::Globals::Perl, args => $file)->run;

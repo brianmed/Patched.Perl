@@ -17,7 +17,7 @@ sub match ($this, $string) {
     my $fh;
 
     if ($this->str) {
-        $fh = IO::String->new($this->str);
+        $fh = IO::String->new(\($this->str));
     }
     else {
         open($fh, "<", $this->path);
@@ -42,7 +42,7 @@ sub find ($this, $string) {
     my $fh;
 
     if ($this->str) {
-        $fh = IO::String->new($this->str);
+        $fh = IO::String->new(\($this->str));
     }
     else {
         open($fh, "<", $this->path);
@@ -64,16 +64,64 @@ sub find ($this, $string) {
     return $line;
 }
 
-sub spurt ($this, $path, $contents) {
-    return Mojo::Util::spurt($contents, $path);
+sub append ($this, $append) {
+    my $fh;
+
+    if ($this->str) {
+        $fh = IO::String->new($this->str);
+    }
+    else {
+        open($fh, "+<", $this->path);
+    }
+
+    print($fh $append);
+
+    close($fh);
+
+    return $this;
 }
 
-sub slurp ($this, $path) {
-    return Mojo::Util::slurp($path);
+sub remove ($this, $line) {
+    if ($this->str) {
+        croak("Only regular files are supported for remove");
+    }
+
+    # Find
+    open(my $fh, "<", $this->path);
+    my ($found, @output) = (0);
+    while (<$fh>) {
+        if ($_ eq $line) {
+            $found = 1;
+            next;
+        }
+
+        push(@output, $_);
+    }
+    close($fh);
+
+    return undef unless $found;
+
+    # Remove
+    open($fh, ">", $this->path);
+    foreach my $line (@output) {
+        print($fh $line);
+    }
+    close($fh);
+
+    return $this;
+}
+
+sub spurt ($this, $contents) {
+    return Mojo::Util::spurt($contents, $this->path);
+}
+
+sub slurp ($this) {
+    return Mojo::Util::slurp($this->path);
 }
 
 sub tmp ($this, $ops) {
-    my ($fh, $filename) = tempfile("patched_tmp_XXXXXX", TMPDIR => 1 );
+    my $suffix = $ops && $$ops{suffix} ? $$ops{suffix} : "tmp";
+    my ($fh, $filename) = tempfile("patched_${suffix}_XXXXXX", TMPDIR => 1);
 
     if ($ops && $$ops{contents}) {
         print($fh $$ops{contents});
