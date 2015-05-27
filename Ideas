@@ -15,18 +15,25 @@ Apache
 Email
 Twilio
 Cron
-    Add
-    List
-    Delete
+    * Add
+    * List
+    * Delete
 User
     * Add
     * Info
     * Delete
 Group
 Command
+    * Run
+    * Find an exe
 Fetch
-Logrotate
+    HTTP
+    HTTPS
+    FTP
+    SCP
+    SFTP
 Process
+    Find
     Kill
     Nice
 Processes
@@ -36,7 +43,7 @@ Processes
     Find
 File
     Find
-    Matches/Contains
+    * Matches
     Compare
     Copy
     Move
@@ -45,16 +52,17 @@ File
     Delete
     Exist
     SetPermission
-    ReplaceRegexp
-    ReplaceLine
-    Append
-    Contains
+    * ReplaceRegexp
+    * ReplaceLine
+    * Append
+    * Contains
 Files (a set)
     Delete
     Move
     Permissions
     Exist
 Packages
+    Check for updates
     Update all
 Package
     Install
@@ -65,5 +73,5 @@ Device
 Mount
 Mounts
 Log
-    File
+    * File
     SysLog

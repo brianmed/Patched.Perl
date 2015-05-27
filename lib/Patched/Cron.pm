@@ -24,7 +24,6 @@ sub exists ($this, $entry) {
     my $crontab = Patched::Command->find("crontab") or croak("Unable to find crontab command");
     my $cmd = Patched::Command->new(cmd => $crontab, args => ["-u", $this->user, "-l"], autodie => 0)->run;
 
-    # Could be empty
     unless ($cmd->success || 256 == int($cmd->child_error)) {
         croak("Unable to get crontab listing");
     }
@@ -96,6 +95,21 @@ sub del ($this, $entry) {
     }
 
     return $this;
+}
+
+sub list ($this) {
+    if (!defined $this->user) {
+        croak("Please pass in a user.\n");
+    }
+
+    my $crontab = Patched::Command->find("crontab") or croak("Unable to find crontab command");
+    my $cmd = Patched::Command->new(cmd => $crontab, args => ["-u", $this->user, "-l"], autodie => 0)->run;
+    
+    unless ($cmd->success || 256 == int($cmd->child_error)) {
+        croak("Unable to get crontab listing");
+    }
+
+    return ${ $cmd->stdout };
 }
 
 1;

@@ -7,6 +7,7 @@ use Moose;
 use Mojo::Util;
 use File::Temp qw(tempfile);
 use IO::String;
+use File::Copy;
 
 use experimental qw(signatures);
 
@@ -102,6 +103,50 @@ sub remove ($this, $line) {
     return undef unless $found;
 
     # Remove
+    open($fh, ">", $this->path);
+    foreach my $line (@output) {
+        print($fh $line);
+    }
+    close($fh);
+
+    return $this;
+}
+
+sub replace ($this, $find, $replace) {
+    if ($this->str) {
+        croak("Only regular files are supported for remove");
+    }
+
+    unless (ref $replace && "RegExp" eq ref($replace)) {
+        croak("Only a RegExp is allowed for \$replace");
+    }
+
+    # Find
+    open(my $fh, "<", $this->path);
+    my ($found, @output) = (0);
+    while (<$fh>) {
+        if (ref $find && "RegExp" eq ref($find)) {
+            if ($_ =~ m/$find/) {
+                $_ =~ m/$replace/;
+                $found = 1;
+                next;
+            }
+        }
+        else {
+            if ($_ eq $find) {
+                $_ =~ m/$replace/;
+                $found = 1;
+                next;
+            }
+        }
+
+        push(@output, $_);
+    }
+    close($fh);
+
+    return undef unless $found;
+
+    # Replace
     open($fh, ">", $this->path);
     foreach my $line (@output) {
         print($fh $line);
