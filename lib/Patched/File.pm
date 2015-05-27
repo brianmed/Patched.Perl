@@ -16,8 +16,8 @@ has 'str' => (is => 'ro');
 sub match ($this, $string) {
     my $fh;
 
-    if ($this->str) {
-        $fh = IO::String->new(\($this->str));
+    if (defined $this->str) {
+        $fh = IO::String->new($this->str);
     }
     else {
         open($fh, "<", $this->path);
@@ -41,8 +41,8 @@ sub match ($this, $string) {
 sub find ($this, $string) {
     my $fh;
 
-    if ($this->str) {
-        $fh = IO::String->new(\($this->str));
+    if (defined $this->str) {
+        $fh = IO::String->new($this->str);
     }
     else {
         open($fh, "<", $this->path);
@@ -67,11 +67,11 @@ sub find ($this, $string) {
 sub append ($this, $append) {
     my $fh;
 
-    if ($this->str) {
+    if (defined $this->str) {
         $fh = IO::String->new($this->str);
     }
     else {
-        open($fh, "+<", $this->path);
+        open($fh, ">>", $this->path);
     }
 
     print($fh $append);

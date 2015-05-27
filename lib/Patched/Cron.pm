@@ -29,7 +29,7 @@ sub exists ($this, $entry) {
         croak("Unable to get crontab listing");
     }
 
-    if (Patched::File->new(str => $cmd->stdout)->find($entry)) {
+    if (Patched::File->new(str => ${ $cmd->stdout })->find($entry)) {
         return 1;
     }
     else {
@@ -53,16 +53,15 @@ sub add ($this, $entry) {
     my $crontab = Patched::Command->find("crontab") or croak("Unable to find crontab command");
     my $cmd = Patched::Command->new(cmd => $crontab, args => ["-u", $this->user, "-l"], autodie => 0)->run;
     
-    # Could be empty
     unless ($cmd->success || 256 == int($cmd->child_error)) {
         croak("Unable to get crontab listing");
     }
 
-    my $crontab_file = Patched::File->tmp({content => $cmd->stdout, suffix => "crontab"});
+    my $crontab_file = Patched::File->tmp({contents => ${ $cmd->stdout }, suffix => "crontab"});
     Patched::File->new(path => $crontab_file)->append("$entry\n");
 
-    $cmd = Patched::Command->new(cmd => $crontab, args => $crontab_file)->run;
-    unless ($cmd->success) {
+    $cmd = Patched::Command->new(cmd => $crontab, args => ["-u", $this->user, $crontab_file], autodie => 0)->run;
+    unless ($cmd->success || 256 == int($cmd->child_error)) {
         croak("Unable to set crontab with new entry");
     }
 
@@ -83,16 +82,16 @@ sub del ($this, $entry) {
     }
 
     my $crontab = Patched::Command->find("crontab") or croak("Unable to find crontab command");
-    my $cmd = Patched::Command->new(cmd => $crontab, args => ["-u", $this->user, "-l"])->run;
-    unless ($cmd->success) {
+    my $cmd = Patched::Command->new(cmd => $crontab, args => ["-u", $this->user, "-l"], autodie => 0)->run;
+    unless ($cmd->success || 256 == int($cmd->child_error)) {
         croak("Unable to get crontab listing");
     }
 
-    my $crontab_file = Patched::File->tmp({content => $cmd->stdout, suffix => "crontab"});
+    my $crontab_file = Patched::File->tmp({contents => ${ $cmd->stdout }, suffix => "crontab"});
     Patched::File->new(path => $crontab_file)->remove("$entry\n");
 
-    $cmd = Patched::Command->new(cmd => $crontab, args => $crontab_file)->run;
-    unless ($cmd->success) {
+    $cmd = Patched::Command->new(cmd => $crontab, args => ["-u", $this->user, $crontab_file])->run;
+    unless ($cmd->success || 256 == int($cmd->child_error)) {
         croak("Unable to set crontab with new entry");
     }
 

@@ -14,9 +14,9 @@ has 'cmd' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
 has 'args' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
 has 'ret' => (is => 'rw');
 has 'child_error' => (is => 'rw', isa => 'Str');
-has 'stdin' => (is => 'ro', isa => 'ArrayRef[Str]');
-has 'stdout' => (is => 'rw', isa => 'ArrayRef[Str]');
-has 'stderr' => (is => 'rw', isa => 'ArrayRef[Str]');
+has 'stdin' => (is => 'ro');
+has 'stdout' => (is => 'rw', isa => 'ScalarRef[Str]');
+has 'stderr' => (is => 'rw', isa => 'ScalarRef[Str]');
 has 'autodie' => (is => 'rw', isa => 'Bool', default => 1);
 has 'success' => (is => 'rw', isa => 'Bool');
 
@@ -50,8 +50,8 @@ sub run ($this) {
     $this->child_error($?);
     $this->ret($ret);
 
-    $this->stdout([split(/\n/, $out)]);
-    $this->stderr([split(/\n/, $err)]);
+    $this->stdout(\$out);
+    $this->stderr(\$err);
 
     if ($this->autodie) {
         croak("$cmd[0]: $?") unless $ret;
