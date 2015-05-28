@@ -36,4 +36,16 @@ sub update ($this) {
     return 1;
 }
 
+sub install ($this, $group) {
+    my $yum = Patched::Command->find("yum") or croak("Unable to find yum command");
+
+    my $cmd = Patched::Command->new(cmd => $yum, args => ["-y", "groupinstall", $group], autodie => 1, timeout => 3600)->run;
+
+    Patched::Log->info("Installed packages via yum");
+    Patched::Log->info(${ $cmd->stdout });
+    Patched::Log->info(${ $cmd->stderr }) if ${ $cmd->stderr };
+
+    return 1;
+}
+
 1;

@@ -103,6 +103,9 @@ sub run {
     say("[sftp mkpath] $InstallDir/log");
     $sftp->mkpath("$InstallDir/log") or die("sftp error: " . $sftp->error);
 
+    say("[sftp mkpath] $InstallDir/dist");
+    $sftp->mkpath("$InstallDir/dist") or die("sftp error: " . $sftp->error);
+
     my @t0 = @{[Time::HiRes::gettimeofday]};
 
     my $json = {
@@ -133,6 +136,12 @@ sub run {
     $sftp->put("dist/CentOS-6.6-perl-5.20.2.tar.gz", "$InstallDir/CentOS-6.6-perl-5.20.2.tar.gz") or die("sftp error: " . $sftp->error);
     say("[sftp symlink] $InstallDir/perl-5.20.2/bin/perl -> $InstallDir/perl");
     $sftp->symlink("$InstallDir/perl" => "$InstallDir/perl-5.20.2/bin/perl") or die("sftp error: " . $sftp->error);
+
+    say("[sftp put] dist/cpanm");
+    $sftp->put("dist/cpanm", "$InstallDir/dist/cpanm") or die("sftp error: " . $sftp->error);
+
+    say("[sftp put] dist/perl-build");
+    $sftp->put("dist/perl-build", "$InstallDir/dist/perl-build") or die("sftp error: " . $sftp->error);
 
     say("[ssh2 system] cd $InstallDir && tar -zxvf CentOS-6.6-perl-5.20.2.tar.gz");
     $system = $ssh2->system({timeout => 120, stderr_discard => 1, stdin_discard => 1, stdout_discard => 1}, "cd $InstallDir && tar -zxf CentOS-6.6-perl-5.20.2.tar.gz") or die("install failed: " . $ssh2->error);

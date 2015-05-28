@@ -12,21 +12,15 @@ use Patched::Log;
 
 use experimental qw(signatures);
 
-sub exists ($this, $name) {
-    if (!defined $name) {
-        croak("Please pass in a name.\n");
-    }
+has 'uname' => (is => 'rw', isa => 'Str');
 
-    return getpwnam($name);
+sub exists ($this) {
+    return getpwnam($this->uname);
 }
 
 # SALT=$(openssl rand -base64 16 | tr -d '+=' | head -c 16)
 # perl -e 'print crypt("password","\$6\$$ARGV[0]\$") . "\n"' $SALT
-sub add ($this, $name, $opts) {
-    if (!defined $name) {
-        croak("Please pass in a name.\n");
-    }
-
+sub add ($this, $opts) {
     my $adduser = Patched::Command->find("adduser");
 
     if (!$adduser) {
@@ -61,18 +55,14 @@ sub add ($this, $name, $opts) {
         push(@{ $args }, @{ $opts->{xtra_args} });
     }
 
-    push(@{ $args }, $name);
+    push(@{ $args }, $this->uname);
 
-    Patched::Log->info("Adding user: $name");
+    Patched::Log->info("Adding user: " . $this->uname);
 
     return Patched::Command->new(cmd => $adduser, args => $args)->run->success;
 }
 
-sub del ($this, $name, $opts) {
-    if (!defined $name) {
-        croak("Please pass in a name.\n");
-    }
-
+sub del ($this, $opts) {
     my $userdel = Patched::Command->find("userdel");
 
     if (!$userdel) {
@@ -95,9 +85,9 @@ sub del ($this, $name, $opts) {
         push(@{ $args }, @{ $opts->{xtra_args} });
     }
 
-    push(@{ $args }, $name);
+    push(@{ $args }, $this->uname);
 
-    Patched::Log->info("Deleting user: $name");
+    Patched::Log->info("Deleting user: " . $this->uname);
 
     return Patched::Command->new(cmd => $userdel, args => $args)->run->success;
 }
@@ -116,6 +106,14 @@ sub name ($this, $uid) {
     }
 
     return scalar getpwuid($uid);
+}
+
+sub home ($this, $name) {
+    if (!defined $name) {
+        croak("Please pass in a name.\n");
+    }
+
+    return (getpwnam($name))[7];
 }
 
 1;

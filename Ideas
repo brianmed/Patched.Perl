@@ -9,6 +9,8 @@ fqdnThe fully qualified (long) hostname of the client system.
 hostnameThe short (unqualified) hostname of the client system.
 kernelThe version of the kernel running upon the client system.
 
+Make more quiet -> verbose as an option
+
 Modules
 
 Apache

@@ -12,7 +12,7 @@ use Patched::Log;
 
 has 'cmd' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
 has 'args' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
-has 'timeout' => (is => 'rw', isa => 'Int', default => 30);
+has 'timeout' => (is => 'rw', isa => 'Int', default => 3600);
 has 'ret' => (is => 'rw');
 has 'child_error' => (is => 'rw', isa => 'Str');
 has 'stdin' => (is => 'ro');
@@ -20,6 +20,7 @@ has 'stdout' => (is => 'rw', isa => 'ScalarRef[Str]');
 has 'stderr' => (is => 'rw', isa => 'ScalarRef[Str]');
 has 'autodie' => (is => 'rw', isa => 'Bool', default => 1);
 has 'success' => (is => 'rw', isa => 'Bool');
+has 'sudo' => (is => 'rw', isa => 'Str');
 
 sub run ($this) {
     my @cmd = ();
@@ -44,6 +45,10 @@ sub run ($this) {
         push(@cmd, ${ $this->{args} });
     }
 
+    if ($this->sudo) {
+        unshift(@cmd, "sudo", "-u", $this->sudo);
+    }
+
     Patched::Log->info(sprintf("IPC::Run::run(%s): STARTING", join(" ", @cmd)));
 
     my ($in, $out, $err);
@@ -54,10 +59,6 @@ sub run ($this) {
     $this->stdout(\$out);
     $this->stderr(\$err);
 
-    if ($this->autodie) {
-        croak("$cmd[0]: $?") unless $ret;
-    }
-
     if ($ret) {
         Patched::Log->info(sprintf("IPC::Run::run(%s): SUCCESS", join(" ", @cmd)));
         $this->success(1);
@@ -65,6 +66,10 @@ sub run ($this) {
     else {
         Patched::Log->info(sprintf("IPC::Run::run(%s): FAIL: %s", join(" ", @cmd), $this->child_error));
         $this->success(0);
+    }
+
+    if ($this->autodie) {
+        croak("$cmd[0]: $?") unless $ret;
     }
 
     return $this;
@@ -81,7 +86,7 @@ sub find ($this, $exe) {
         }
     }
 
-    return undef;
+    croak("Unable to find $exe");
 }
 
 1;
