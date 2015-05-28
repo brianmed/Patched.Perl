@@ -6,6 +6,10 @@ use Getopt::Long qw(GetOptionsFromArray :config no_auto_abbrev no_ignore_case);
 use Mojo::Date;
 use Mojo::JSON 'encode_json';
 use Mojo::Util qw(slurp);
+use Net::OpenSSH;
+
+use Patched::File;
+use Patched::Globals;
 
 has description => 'Manage Patched jobs';
 has usage => sub { shift->extract_usage };
@@ -18,7 +22,12 @@ sub run {
       'run=s'      => \my $run,
       'enqueue=s'  => \my $enqueue,
       'api_key=s'  => \my $api_key,
-      'script=s'     => \my $script;
+      'user=s'   => \my $user,
+      'pass=s'   => \my $pass,
+      'port=s'   => \my $port,
+      'script=s'   => \my $script;
+
+    $port //= 22;
     
     if ($enqueue && $run) {
         $self->usage;
@@ -30,28 +39,34 @@ sub run {
         $self->app->minion->enqueue($enqueue, $bytes, $options)
     }
 
+    # "standalone mode"
     if ($run) {
-        use Mojo::UserAgent;
-        use Mojo::URL;
+        say("[ssh2 connect] $run");
+        my $ssh2 = Net::OpenSSH->new(host => $run, user => $user, password => $pass, port => $port, master_opts => [-o => "StrictHostKeyChecking=no"]);
 
-        my $ua = Mojo::UserAgent->new;
-        $ua->inactivity_timeout(3600);
-        $ua->request_timeout(3600);
-
-        my $url = Mojo::URL->new("http://$run:6000/api/v1/job/run");
-        my $tx = $ua->post($url, => json => { code => slurp($script), api_key => $api_key, name => $script });
-
-        if ($tx->success) {
-            if ($tx->res->json->{success}) {
-                say("Job was successful");
-            }
-            else {
-                say("Job fail: " . $tx->res->json->{data}{message});
-            }
+        say("[verify supported OS] $run");
+        my $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "test -f /etc/centos-release && grep 'CentOS release 6' /etc/centos-release") or die("verify failed: " . $ssh2->error);
+        unless ($system) {
+            die("We only support CentOS right now.\n");
         }
-        else {
-            say(sprintf("Error [%s]: %s", $tx->error->{code} // "0", $tx->error->{message}));
-        }
+
+        say("[run $script]");
+        my $code = Patched::File->new(path => $script)->slurp;
+
+        my $contents = $Patched::Globals::Preamble . "\n\n### $script\n\n" . $code;
+        my $local_file = Patched::File->tmp({contents => $contents, suffix => "pl"});
+
+        my $remote_file = $ssh2->capture({timeout => 3600}, "mktemp --tmpdir patched.XXXXXXX.pl") or die("system failed: " . $ssh2->error);
+        chomp($remote_file);
+
+        my $sftp = $ssh2->sftp;
+        say("[put $local_file -> $remote_file]");
+        $sftp->put($local_file, $remote_file) or die("sftp error: " . $sftp->error);
+
+        say("[run /opt/Patched/perl $remote_file]");
+        my $out = $ssh2->capture({timeout => 3600, stdin_discard => 1, stderr_to_stdout => 1}, "/opt/Patched/perl $remote_file") or die("system failed: " . $ssh2->error);
+
+        say($out);
     }
 }
 

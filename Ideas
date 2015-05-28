@@ -62,8 +62,8 @@ Files (a set)
     Permissions
     Exist
 Packages
-    Check for updates
-    Update all
+    * Check for updates
+    * Update all
 Package
     Install
     Remove

@@ -11,3 +11,4 @@ requires 'Net::OpenSSH', 0;
 requires 'IO::Pty', 0;
 requires 'Crypt::Eksblowfish::Bcrypt', 0;
 requires 'IO::String', 0;
+requires 'Perl::Build', 0;

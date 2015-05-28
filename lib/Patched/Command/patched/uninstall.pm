@@ -25,6 +25,7 @@ sub run {
       'host=s'   => \my $host,
       'user=s'   => \my $user,
       'pass=s'   => \my $pass,
+      'start'    => \my $start,
       'port=s'   => \my $port;
 
     $port //= 22;
@@ -53,14 +54,16 @@ sub run {
         die("Install directory '$InstallDir' doesn't exists.\n");
     }
 
-    say("[stop service]");
-    $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "service patched stop") or die("system failed: " . $ssh2->error);
+    if ($start) {
+        say("[stop service]");
+        $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "service patched stop") or die("system failed: " . $ssh2->error);
 
-    say("[remove symlinks]");
-    $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "chkconfig --del patched") or die("system failed: " . $ssh2->error);
+        say("[remove symlinks]");
+        $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "chkconfig --del patched") or die("system failed: " . $ssh2->error);
 
-    say("[remove service]");
-    $sftp->remove("/etc/rc.d/init.d/patched") or die("sftp error: " . $sftp->error);
+        say("[remove service]");
+        $sftp->remove("/etc/rc.d/init.d/patched") or die("sftp error: " . $sftp->error);
+    }
 
     say("[remove $InstallDir]");
     $sftp->rremove($InstallDir) or die("sftp error: " . $sftp->error);
