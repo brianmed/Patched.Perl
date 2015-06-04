@@ -11,6 +11,8 @@ kernelThe version of the kernel running upon the client system.
 
 Make more quiet -> verbose as an option
 
+simpler constructors: cmd(), file(), service(), install()
+
 Modules
 
 Apache
