@@ -51,7 +51,7 @@ sub run {
         say("[service running]");
         $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1, stderr_discard => 1}, "chkconfig --list patched");
 
-        unless ($system) {
+        if ($system) {
             say("[stop service]");
             $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1, stderr_discard => 1}, "service patched stop");
         }
