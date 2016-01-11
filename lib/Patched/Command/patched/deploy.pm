@@ -146,7 +146,7 @@ sub run {
     say("[ssh2 system] cd $InstallDir && tar -zxvf CentOS-6.6-perl-5.20.2.tar.gz");
     $system = $ssh2->system({timeout => 120, stderr_discard => 1, stdin_discard => 1, stdout_discard => 1}, "cd $InstallDir && tar -zxf CentOS-6.6-perl-5.20.2.tar.gz") or die("install failed: " . $ssh2->error);
     unless ($system) {
-        die("We only support CentOS right now.\n");
+        die("Unable to install perl-5.20.3\n");
     }
 
     say("[sftp remove] $InstallDir/CentOS-6.6-perl-5.20.2.tar.gz");

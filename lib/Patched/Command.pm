@@ -2,13 +2,14 @@ package Patched::Command;
 
 use Mojo::Base -strict;
 
-use experimental qw(signatures);
-
 use Carp;
 use Moose;
 use IPC::Run qw();
 
 use Patched::Log;
+
+use feature qw(signatures);
+no warnings "experimental::signatures";
 
 has 'cmd' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
 has 'args' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');

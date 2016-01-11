@@ -5,8 +5,7 @@ use Mojo::Base 'Mojolicious';
 use Patched::Globals;
 use Patched::Bcrypt;
 
-sub api_key
-{
+sub api_key {
     state $api_key = pop;
 }
 

@@ -6,7 +6,7 @@
 
 use lib qw(lib);
 
-use Mojolicious::Lite;
+use Patched::CommandLine;
 
 plugin qw(Patched);
 
