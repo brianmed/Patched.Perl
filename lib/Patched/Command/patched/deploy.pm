@@ -29,18 +29,12 @@ sub run {
       'user=s'   => \my $user,
       'pass=s'   => \my $pass,
       'port=s'   => \my $port,
-      'method=s' => \my $method,
       'type=s'   => \my $type,
       'api_key=s' => \my $api_key,
       'config_dbi_user=s' => \my $dbi_user,
       'config_dbi_pass=s' => \my $dbi_pass,
       'start'    => \my $start,
       'boot'     => \my $boot;
-
-    unless ($method) {
-        say $self->usage;
-        die("Please specify -method.\n");
-    }
 
     unless ($host) {
         say $self->usage;
@@ -53,11 +47,6 @@ sub run {
     }
 
     $api_key = Patched::Bcrypt->hash_password($api_key);
-
-    unless ($method =~ m/^(ssh|local)$/) {
-        say $self->usage;
-        die("Please specify ssh or local for -method.\n");
-    }
 
     if ($start && !$boot) {
         die("Please don't specify -start without -boot.\n");
@@ -132,25 +121,21 @@ sub run {
     say("[sftp put] $InstallDir/config");
     $sftp->put($fh, "$InstallDir/config") or die("sftp error: " . $sftp->error);
 
-    say("[sftp put] $InstallDir/CentOS-6.6-perl-5.20.2.tar.gz");
-    $sftp->put("dist/CentOS-6.6-perl-5.20.2.tar.gz", "$InstallDir/CentOS-6.6-perl-5.20.2.tar.gz") or die("sftp error: " . $sftp->error);
-    say("[sftp symlink] $InstallDir/perl-5.20.2/bin/perl -> $InstallDir/perl");
-    $sftp->symlink("$InstallDir/perl" => "$InstallDir/perl-5.20.2/bin/perl") or die("sftp error: " . $sftp->error);
+    my $dry_version = "5.20.3";
 
-    say("[sftp put] dist/cpanm");
-    $sftp->put("dist/cpanm", "$InstallDir/dist/cpanm") or die("sftp error: " . $sftp->error);
+    say("[sftp put] $InstallDir/CentOS-6-perl-$dry_version.tar.gz");
+    $sftp->put("dist/CentOS-6-perl-$dry_version.tar.gz", "$InstallDir/CentOS-6-perl-$dry_version.tar.gz") or die("sftp error: " . $sftp->error);
+    say("[sftp symlink] $InstallDir/perl-$dry_version/bin/perl -> $InstallDir/perl");
+    $sftp->symlink("$InstallDir/perl" => "$InstallDir/perl-$dry_version/bin/perl") or die("sftp error: " . $sftp->error);
 
-    say("[sftp put] dist/perl-build");
-    $sftp->put("dist/perl-build", "$InstallDir/dist/perl-build") or die("sftp error: " . $sftp->error);
-
-    say("[ssh2 system] cd $InstallDir && tar -zxvf CentOS-6.6-perl-5.20.2.tar.gz");
-    $system = $ssh2->system({timeout => 120, stderr_discard => 1, stdin_discard => 1, stdout_discard => 1}, "cd $InstallDir && tar -zxf CentOS-6.6-perl-5.20.2.tar.gz") or die("install failed: " . $ssh2->error);
+    say("[ssh2 system] cd $InstallDir && tar -zxvf CentOS-6-perl-$dry_version.tar.gz");
+    $system = $ssh2->system({timeout => 120, stderr_discard => 1, stdin_discard => 1, stdout_discard => 1}, "cd $InstallDir && tar -zxf CentOS-6-perl-$dry_version.tar.gz") or die("install failed: " . $ssh2->error);
     unless ($system) {
-        die("Unable to install perl-5.20.3\n");
+        die("Unable to install perl-$dry_version\n");
     }
 
-    say("[sftp remove] $InstallDir/CentOS-6.6-perl-5.20.2.tar.gz");
-    $sftp->remove("$InstallDir/CentOS-6.6-perl-5.20.2.tar.gz") or die("sftp error: " . $sftp->error);
+    say("[sftp remove] $InstallDir/CentOS-6-perl-$dry_version.tar.gz");
+    $sftp->remove("$InstallDir/CentOS-6-perl-$dry_version.tar.gz") or die("sftp error: " . $sftp->error);
 
     say("[sftp rput] docroot $InstallDir/docroot");
     $sftp->rput("docroot", "$InstallDir/docroot") or die("sftp error: " . $sftp->error);
@@ -208,7 +193,6 @@ Patched::Command::patched::deploy - Deploy Patched
     --user <user>     Username for ssh
     --pass <secret>   Password for ssh
     --port <number>   Port for ssh
-    --method <type>   Install mode [ssh|local]
     --type <mode>     Type of install [standalone|minion]
     --api_key <key>   Password for remote agent
     --config_dbi_user <user>   Username for DBI [used with minion]
