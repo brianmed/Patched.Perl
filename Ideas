@@ -18,6 +18,10 @@ simpler constructors: cmd(), file(), service(), install()
 
 Log the output of commands as they happen
 
+Be able to upgrade perl
+Be able to upgrade base packages
+
+
 Modules
 -------
 
@@ -79,6 +83,9 @@ Package
     Remove
     Update
     Query
+Localhost
+    * Reboot
+    Change timezone
 Device
 Mount
 Mounts

@@ -66,7 +66,7 @@ sub run {
 
         say("[run /opt/Patched/perl $remote_file]");
         my $out = $ssh2->capture({timeout => 3600, stdin_discard => 1, stderr_to_stdout => 1}, "/opt/Patched/perl $remote_file");
-        die("ssh2 capture error: %s\n", $ssh2->error) if $ssh2->error;
+        die(sprintf("ssh2 capture error: %s\n", $ssh2->error)) if $ssh2->error;
         
         say($out) if $verbose;
     }
