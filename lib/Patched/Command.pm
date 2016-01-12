@@ -5,18 +5,19 @@ use Mojo::Base -strict;
 use Carp;
 use Moose;
 use IPC::Run qw();
+use Scalar::Util qw(blessed);
 
 use Patched::Log;
 
 use feature qw(signatures);
 no warnings "experimental::signatures";
 
-has 'cmd' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
+has 'cmd' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | ArrayRef[Patched::Command] | Str');
 has 'args' => (is => 'ro', isa => 'ScalarRef[Str] | ArrayRef[Str] | Str');
 has 'timeout' => (is => 'rw', isa => 'Int', default => 3600);
 has 'ret' => (is => 'rw');
 has 'child_error' => (is => 'rw', isa => 'Str');
-has 'stdin' => (is => 'ro');
+has 'stdin' => (is => 'ro');  
 has 'stdout' => (is => 'rw', isa => 'ScalarRef[Str]');
 has 'stderr' => (is => 'rw', isa => 'ScalarRef[Str]');
 has 'autodie' => (is => 'rw', isa => 'Bool', default => 1);
@@ -24,36 +25,37 @@ has 'success' => (is => 'rw', isa => 'Bool');
 has 'sudo' => (is => 'rw', isa => 'Str');
 
 sub run ($this) {
-    my @cmd = ();
+    my @run = ();
 
-    if (!ref $this->{cmd}) {
-        @cmd = ($this->{cmd});
-    }
-    elsif ("ARRAY" eq ref $this->{cmd}) {
-        @cmd = @{ $this->{cmd} };
-    }
-    elsif ("SCALAR" eq ref $this->{cmd}) {
-        @cmd = (${ $this->{cmd} });
-    }
-
-    if (!ref $this->{args}) {
-        push(@cmd, $this->{args});
-    }
-    elsif ("ARRAY" eq ref $this->{args}) {
-        push(@cmd, @{ $this->{args} });
-    }
-    elsif ("SCALAR" eq ref $this->{args}) {
-        push(@cmd, ${ $this->{args} });
-    }
-
-    if ($this->sudo) {
-        unshift(@cmd, "sudo", "-u", $this->sudo);
-    }
-
-    Patched::Log->info(sprintf("IPC::Run::run(%s): STARTING", join(" ", @cmd)));
+    my $cmd = $this->cmd;
 
     my ($in, $out, $err);
-    my $ret = IPC::Run::run(\@cmd, \$in, \$out, \$err, IPC::Run::timeout($this->timeout));
+
+    if ("ARRAY" eq ref $cmd && blessed $cmd->[0]) {
+        my (@left, @right);
+
+        my $left = $cmd->[0];
+        my $right = $cmd->[1];
+
+        @left = $this->_cmd($left->cmd, $left->args);
+        @right = $this->_cmd($right->cmd, $right->args);
+
+        @run = (\@left, \$in, '|', \@right, \$out, \$err);
+
+        Patched::Log->info(sprintf("IPC::Run::run(%s | %s): STARTING", 
+            join(" ", $left->cmd, @{$left->args}), 
+            join(" ", $right->cmd, @{$right->args})
+        ));
+    }
+    else {
+        my @cmd = $this->_cmd($cmd, $this->args);
+
+        @run = (\@cmd, \$in, \$out, \$err);
+
+        Patched::Log->info(sprintf("IPC::Run::run(%s): STARTING", join(" ", $cmd, @{ $this->args })));
+    }
+
+    my $ret = IPC::Run::run(@run, IPC::Run::timeout($this->timeout));
     $this->child_error($?);
     $this->ret($ret);
 
@@ -61,19 +63,56 @@ sub run ($this) {
     $this->stderr(\$err);
 
     if ($ret) {
-        Patched::Log->info(sprintf("IPC::Run::run(%s): SUCCESS", join(" ", @cmd)));
+        Patched::Log->info(sprintf("IPC::Run::run: SUCCESS"));
         $this->success(1);
     }
     else {
-        Patched::Log->info(sprintf("IPC::Run::run(%s): FAIL: %s", join(" ", @cmd), $this->child_error));
+        Patched::Log->info(sprintf("IPC::Run::run: FAIL: %s: %s", $this->ret, $this->child_error));
+        Patched::Log->info(sprintf("-==========\n%s\n==========-\n", ${$this->stderr} // ''));
         $this->success(0);
     }
 
     if ($this->autodie) {
-        croak("$cmd[0]: $?") unless $ret;
+        croak("$run[0]: $?") unless $ret;
     }
 
     return $this;
+}
+
+sub pipe ($this) {
+    $this->run;
+
+    return $this;
+}
+
+sub _cmd ($this, $cmd, $args) {
+    my @cmd = ();
+
+    if (!ref ${cmd}) {
+        @cmd = (${cmd});
+    }
+    elsif ("ARRAY" eq ref ${cmd}) {
+        @cmd = @{ ${cmd} };
+    }
+    elsif ("SCALAR" eq ref ${cmd}) {
+        @cmd = (${ ${cmd} });
+    }
+
+    if (!ref ${args}) {
+        push(@cmd, ${args});
+    }
+    elsif ("ARRAY" eq ref ${args}) {
+        push(@cmd, @{ ${args} });
+    }
+    elsif ("SCALAR" eq ref ${args}) {
+        push(@cmd, ${ ${args} });
+    }
+
+    if ($this->sudo) {
+        unshift(@cmd, "sudo", "-u", $this->sudo);
+    }
+
+    return @cmd;
 }
 
 sub find ($this, $exe) {

@@ -1,19 +1,25 @@
 Some lifted from Slaughter and Rex
 
 Globals
+-------
 
-archEither i386 or amd64, depending upon the type of the system.
-bits32 or 64 depending on the client system.
-domainThe domain portion of the hostname.
-fqdnThe fully qualified (long) hostname of the client system.
-hostnameThe short (unqualified) hostname of the client system.
-kernelThe version of the kernel running upon the client system.
+arch - Either i386 or amd64, depending upon the type of the system.
+bits - 32 or 64 depending on the client system.
+domain - The domain portion of the hostname.
+fqdn - The fully qualified (long) hostname of the client system.
+hostname - The short (unqualified) hostname of the client system.
+kernel - The version of the kernel running upon the client system.
 
 Make more quiet -> verbose as an option
 
+Run a command once on nextboot (perhaps using @restart in cron)
+
 simpler constructors: cmd(), file(), service(), install()
 
+Log the output of commands as they happen
+
 Modules
+-------
 
 Apache
 Email

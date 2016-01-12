@@ -25,6 +25,7 @@ sub run {
       'user=s'   => \my $user,
       'pass=s'   => \my $pass,
       'port=s'   => \my $port,
+      'verbose'   => \my $verbose,
       'script=s'   => \my $script;
 
     $port //= 22;
@@ -64,9 +65,10 @@ sub run {
         $sftp->put($local_file, $remote_file) or die("sftp error: " . $sftp->error);
 
         say("[run /opt/Patched/perl $remote_file]");
-        my $out = $ssh2->capture({timeout => 3600, stdin_discard => 1, stderr_to_stdout => 1}, "/opt/Patched/perl $remote_file") or die("system failed: " . $ssh2->error);
-
-        say($out);
+        my $out = $ssh2->capture({timeout => 3600, stdin_discard => 1, stderr_to_stdout => 1}, "/opt/Patched/perl $remote_file");
+        die("ssh2 capture error: %s\n", $ssh2->error) if $ssh2->error;
+        
+        say($out) if $verbose;
     }
 }
 
