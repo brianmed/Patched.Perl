@@ -10,7 +10,9 @@ our $Preamble = qq(
 
     use Patched::Bcrypt;
     use Patched::Command;
+    use Patched::Config;
     use Patched::Cron;
+    use Patched::Directory;
     use Patched::Environment;
     use Patched::File;
     use Patched::Globals;

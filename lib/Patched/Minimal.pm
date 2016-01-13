@@ -15,6 +15,30 @@ sub import {
         Patched::Command->new(@_);
     });
 
+    monkey_patch($caller, config => sub { 
+        if (1 == @_) {
+            unshift(@_, "path");
+        }
+
+        Patched::Config->new(@_)->parse;
+    });
+
+    monkey_patch($caller, directory => sub { 
+        if (1 == @_) {
+            unshift(@_, "path");
+        }
+
+        Patched::Directory->new(@_);
+    });
+
+    monkey_patch($caller, file => sub { 
+        if (1 == @_) {
+            unshift(@_, "path");
+        }
+
+        Patched::File->new(@_);
+    });
+
     monkey_patch($caller, localhost => sub { 
         Patched::Localhost->new(@_);
     });
@@ -29,6 +53,14 @@ sub import {
 
     monkey_patch($caller, service => sub { 
         Patched::Service->new(@_)
+    });
+
+    monkey_patch($caller, user => sub { 
+        if (1 == @_) {
+            unshift(@_, "uname");
+        }
+
+        Patched::User->new(@_)
     });
 
     monkey_patch($caller, pipeline => sub { 

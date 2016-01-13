@@ -114,44 +114,33 @@ sub remove ($this, $line) {
 
 sub replace ($this, $find, $replace) {
     if ($this->str) {
-        croak("Only regular files are supported for remove");
+        croak("Only regular files are supported for replace");
     }
 
-    unless (ref $replace && "RegExp" eq ref($replace)) {
-        croak("Only a RegExp is allowed for \$replace");
-    }
-
-    # Find
+    # Find / replace (memory intensive)
     open(my $fh, "<", $this->path);
-    my ($found, @output) = (0);
+    my ($found, $output) = (0, "");
     while (<$fh>) {
         if (ref $find && "RegExp" eq ref($find)) {
             if ($_ =~ m/$find/) {
-                $_ =~ m/$replace/;
+                $_ = $replace;
                 $found = 1;
-                next;
             }
         }
         else {
             if ($_ eq $find) {
-                $_ =~ m/$replace/;
+                $_ = $replace;
                 $found = 1;
-                next;
             }
         }
 
-        push(@output, $_);
+        $output .= $_;
     }
     close($fh);
 
     return undef unless $found;
 
-    # Replace
-    open($fh, ">", $this->path);
-    foreach my $line (@output) {
-        print($fh $line);
-    }
-    close($fh);
+    $this->spurt($output);
 
     return $this;
 }

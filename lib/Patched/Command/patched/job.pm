@@ -7,6 +7,7 @@ use Mojo::Date;
 use Mojo::JSON 'encode_json';
 use Mojo::Util qw(slurp);
 use Net::OpenSSH;
+use File::Basename qw(basename);
 
 use Patched::File;
 use Patched::Globals;
@@ -25,6 +26,7 @@ sub run {
       'user=s'   => \my $user,
       'pass=s'   => \my $pass,
       'port=s'   => \my $port,
+      'conf=s'   => \my $conf,
       'verbose'   => \my $verbose,
       'script=s'   => \my $script;
 
@@ -57,12 +59,24 @@ sub run {
         my $contents = $Patched::Globals::Preamble . "\n\n### $script\n\n" . $code;
         my $local_file = Patched::File->tmp({contents => $contents, suffix => "pl"});
 
-        my $remote_file = $ssh2->capture({timeout => 3600}, "mktemp --tmpdir patched.XXXXXXX.pl") or die("system failed: " . $ssh2->error);
+        my $remote_dir = $ssh2->capture({timeout => 3600}, "mktemp -d") or die("system failed: " . $ssh2->error);
+        chomp($remote_dir);
+
+        my $remote_file = $ssh2->capture({timeout => 3600}, "mktemp --tmpdir=$remote_dir patched.XXXXXXX.pl") or die("system failed: " . $ssh2->error);
         chomp($remote_file);
 
         my $sftp = $ssh2->sftp;
         say("[put $local_file -> $remote_file]");
         $sftp->put($local_file, $remote_file) or die("sftp error: " . $sftp->error);
+
+        if ($conf) {
+            my $file = basename($conf);
+
+            my $sftp = $ssh2->sftp;
+
+            say("[put $conf -> $remote_dir/$file]");
+            $sftp->put($conf, "$remote_dir/$file") or die("sftp error: " . $sftp->error);
+        }
 
         say("[run /opt/Patched/perl $remote_file]");
         my $out = $ssh2->capture({timeout => 3600, stdin_discard => 1, stderr_to_stdout => 1}, "/opt/Patched/perl $remote_file");

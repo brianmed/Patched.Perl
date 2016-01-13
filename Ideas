@@ -21,6 +21,11 @@ Log the output of commands as they happen
 Be able to upgrade perl
 Be able to upgrade base packages
 
+Put minion / api code in it's own branch - focus on ssh
+
+Need a tmpdir for little files 'n things for the currently executing script
+
+CTRL-C doesn't seem to work well
 
 Modules
 -------
@@ -70,6 +75,9 @@ File
     * ReplaceLine
     * Append
     * Contains
+    ReplaceAfterALine
+    CommentLine
+    CommentLines
 Files (a set)
     Delete
     Move
