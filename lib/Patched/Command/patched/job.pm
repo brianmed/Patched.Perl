@@ -21,8 +21,6 @@ sub run {
     my ($args, $options) = ([], {});
     GetOptionsFromArray \@args,
       'run=s'      => \my $run,
-      'enqueue=s'  => \my $enqueue,
-      'api_key=s'  => \my $api_key,
       'user=s'   => \my $user,
       'pass=s'   => \my $pass,
       'port=s'   => \my $port,
@@ -32,16 +30,6 @@ sub run {
 
     $port //= 22;
     
-    if ($enqueue && $run) {
-        $self->usage;
-        die("Please don't specify -run and -enqueue.\n");
-    }
-
-    if ($enqueue) {
-        my $bytes = encode_json(slurp($script));
-        $self->app->minion->enqueue($enqueue, $bytes, $options)
-    }
-
     # "standalone mode"
     if ($run) {
         say("[ssh2 connect] $run");
@@ -57,17 +45,15 @@ sub run {
         my $code = Patched::File->new(path => $script)->slurp;
 
         my $contents = $Patched::Globals::Preamble . "\n\n### $script\n\n" . $code;
-        my $local_file = Patched::File->tmp({contents => $contents, suffix => "pl"});
 
         my $remote_dir = $ssh2->capture({timeout => 3600}, "mktemp -d") or die("system failed: " . $ssh2->error);
         chomp($remote_dir);
 
-        my $remote_file = $ssh2->capture({timeout => 3600}, "mktemp --tmpdir=$remote_dir patched.XXXXXXX.pl") or die("system failed: " . $ssh2->error);
-        chomp($remote_file);
+        my $remote_file = sprintf("%s/%s", $remote_dir, basename($script));
 
         my $sftp = $ssh2->sftp;
-        say("[put $local_file -> $remote_file]");
-        $sftp->put($local_file, $remote_file) or die("sftp error: " . $sftp->error);
+        say("[put $script -> $remote_file]");
+        $sftp->put_content($contents, $remote_file) or die("sftp error: " . $sftp->error);
 
         if ($conf) {
             my $file = basename($conf);
@@ -102,7 +88,6 @@ Patched::Command::patched::job - Patched job command
 
   Options:
     --run <host>          Host to run job on
-    --api_key <key>       Password for remote agent
     --enqueue <name>      New job to be enqueued
     --script <filename>   Filename to load
 

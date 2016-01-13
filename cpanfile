@@ -1,8 +1,6 @@
 requires 'Mojolicious', 0;
 requires 'Moose', 0;
 requires 'IPC::Run', 0;
-requires 'Minion', 0;
-requires 'Minion::Backend::SQLite', 0;
 requires 'DBI', 0;
 requires 'DBD::SQLite', 0;
 requires 'Mojo::SQLite', 0;

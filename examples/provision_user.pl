@@ -9,11 +9,11 @@ unless (user($conf->{username})->exists) {
     });
 }
 
-my $append = sprintf("%s        ALL=(ALL)       NOPASSWD: ALL", $conf->{username});
+my $append = sprintf("%s        ALL=(ALL)       NOPASSWD: ALL\n", $conf->{username});
 my $find = "Defaults    requiretty\n";
 my $replace = "# $find";
 
-## <-- Needs debugging
+##
 file("/etc/sudoers")->append($append)->replace($find, $replace);
 
 ##

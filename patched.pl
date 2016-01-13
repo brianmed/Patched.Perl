@@ -10,7 +10,4 @@ use Patched::CommandLine;
 
 plugin qw(Patched);
 
-# May need to groupinstall Development\ Tools
-# May need POSTGRES_HOME set
-
 app->start;

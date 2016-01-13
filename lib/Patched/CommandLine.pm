@@ -28,8 +28,6 @@ sub import {
 
   monkey_patch $caller, plugin => sub { $app->plugin(@_) };
 
-  monkey_patch $caller, plugin => sub { $app->plugin(@_) };
-
   require Mojolicious::Commands;
 
   Mojolicious::Commands::has(message => sub { "Usage:\n\n" });
