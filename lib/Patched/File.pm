@@ -8,6 +8,8 @@ use Mojo::Util;
 use File::Temp qw(tempfile);
 use IO::String;
 use File::Copy;
+use Tie::File;
+use List::Util qw(any);
 
 use experimental qw(signatures);
 
@@ -52,8 +54,6 @@ sub find ($this, $string) {
     my $line;
 
     while (<$fh>) {
-        chomp;
-
         if ($string eq $_) {
             $line = $_;
             last;
@@ -65,9 +65,54 @@ sub find ($this, $string) {
     return $line;
 }
 
+sub comment ($this, @comments) {
+    my $fh;
+    if (defined $this->str) {
+        $fh = IO::String->new($this->str);
+    }
+    else {
+        open($fh, "+<", $this->path);
+    }
+
+    tie(my @lines, "Tie::File", $fh);
+    foreach my $line (@lines) {
+        if (any {"$line\n" eq $_} @comments) {
+            $line = "# $line";
+            next;
+        }
+    }
+    untie(@lines);
+
+    return $this;
+}
+
+# append if not found
+sub upsert ($this, $upsert) {
+    return $this if $this->find($upsert);
+
+    $this->append($upsert);
+
+    return $this;
+}
+
+sub prepend ($this, $prepend) {
+    my $fh;
+    if (defined $this->str) {
+        $fh = IO::String->new($this->str);
+    }
+    else {
+        open($fh, "+<", $this->path);
+    }
+
+    tie(my @lines, "Tie::File", $fh);
+    unshift(@lines, $prepend);
+    untie(@lines);
+
+    return $this;
+}
+
 sub append ($this, $append) {
     my $fh;
-
     if (defined $this->str) {
         $fh = IO::String->new($this->str);
     }

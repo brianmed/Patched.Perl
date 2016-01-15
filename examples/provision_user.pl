@@ -9,12 +9,11 @@ unless (user($conf->{username})->exists) {
     });
 }
 
-my $append = sprintf("%s        ALL=(ALL)       NOPASSWD: ALL\n", $conf->{username});
-my $find = "Defaults    requiretty\n";
-my $replace = "# $find";
+my $add_access = sprintf("%s        ALL=(ALL)       NOPASSWD: ALL\n", $conf->{username});
+my $requiretty = "Defaults    requiretty\n";
 
 ##
-file("/etc/sudoers")->append($append)->replace($find, $replace);
+file("/etc/sudoers")->upsert($add_access)->comment($requiretty);
 
 ##
 directory("/opt")->chown($conf->{username}, $conf->{username});

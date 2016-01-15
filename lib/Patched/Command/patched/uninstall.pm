@@ -35,11 +35,11 @@ sub run {
         die("Please specify -host.\n");
     }
 
-    say("[ssh2 connect] $host");
+    say("[ssh2 connect - $host]");
     my $ssh2 = Net::OpenSSH->new(host => $host, user => $user, password => $pass, port => $port, master_opts => [-o => "StrictHostKeyChecking=no"]);
     my $sftp = $ssh2->sftp;
 
-    say("[verify supported OS] $host");
+    say("[verify supported OS]");
     my $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "test -f /etc/centos-release && grep 'CentOS release 6' /etc/centos-release") or die("verify failed: " . $ssh2->error);
     unless ($system) {
         die("We only support CentOS right now.\n");
@@ -67,7 +67,7 @@ sub run {
         }
     }
 
-    say("[sftp check previous install] $host");
+    say("[sftp check previous install]");
     my $not_found = 0;
     $sftp->find($InstallDir, on_error => sub { $not_found = 1 });
     if ($not_found) {

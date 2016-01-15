@@ -32,13 +32,23 @@ sub run {
     
     # "standalone mode"
     if ($run) {
-        say("[ssh2 connect] $run");
+        say("[ssh2 connect - $run]");
         my $ssh2 = Net::OpenSSH->new(host => $run, user => $user, password => $pass, port => $port, master_opts => [-o => "StrictHostKeyChecking=no"]);
 
-        say("[verify supported OS] $run");
+        say("[verify supported OS]");
         my $system = $ssh2->system({timeout => 30, stdin_discard => 1, stdout_discard => 1}, "test -f /etc/centos-release && grep 'CentOS release 6' /etc/centos-release") or die("verify failed: " . $ssh2->error);
         unless ($system) {
             die("We only support CentOS right now.\n");
+        }
+
+        my $sftp = $ssh2->sftp;
+
+        say("[sftp check previous install]");
+        my $InstallDir = $Patched::Globals::InstallDir;
+        my $not_found = 0;
+        $sftp->find($InstallDir, on_error => sub { $not_found = 1 });
+        if ($not_found) {
+            die("Install directory '$InstallDir' doesn't exists.\n");
         }
 
         say("[run $script]");
@@ -51,7 +61,6 @@ sub run {
 
         my $remote_file = sprintf("%s/%s", $remote_dir, basename($script));
 
-        my $sftp = $ssh2->sftp;
         say("[put $script -> $remote_file]");
         $sftp->put_content($contents, $remote_file) or die("sftp error: " . $sftp->error);
 

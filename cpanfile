@@ -10,3 +10,5 @@ requires 'IO::Pty', 0;
 requires 'Crypt::Eksblowfish::Bcrypt', 0;
 requires 'IO::String', 0;
 requires 'Perl::Build', 0;
+requires 'Tie::File', 0;
+requires 'List::Util', 0;
