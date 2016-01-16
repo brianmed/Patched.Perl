@@ -1,8 +1,8 @@
-package Patched::Command::patched::build;
-
-use autodie;
+package Patched::Command::build;
 
 use Mojo::Base 'Mojolicious::Command';
+
+use autodie;
 
 use Getopt::Long qw(GetOptionsFromArray :config no_auto_abbrev no_ignore_case);
 use Mojo::Date;

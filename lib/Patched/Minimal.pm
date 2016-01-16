@@ -5,6 +5,8 @@ use Mojo::Base -strict;
 use Carp;
 use Moose;
 use Mojo::Util 'monkey_patch';
+use Mojo::Loader 'data_section';
+use Mojo::Template;
 
 use Patched::Command;
 
@@ -17,7 +19,17 @@ sub import {
 
     monkey_patch($caller, config => sub { 
         if (1 == @_) {
-            unshift(@_, "path");
+            if ("-" eq $_[0]) {
+              my $name = "minimal.conf";
+
+              my $str = Mojo::Template->new->name("template $name from DATA section")
+                ->render(data_section("main", $name));
+
+                @_ = (str => $str);
+            }
+            else {
+                unshift(@_, "path");
+            }
         }
 
         Patched::Config->new(@_)->parse;

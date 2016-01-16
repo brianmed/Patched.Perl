@@ -1,4 +1,4 @@
-package Patched::Command::patched::job;
+package Patched::Command::job;
 
 use Mojo::Base 'Mojolicious::Command';
 

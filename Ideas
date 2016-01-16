@@ -14,7 +14,7 @@ Make more quiet -> verbose as an option
 
 Run a command once on nextboot (perhaps using @restart in cron)
 
-simpler constructors: cmd(), file(), service(), install()
+* simpler constructors: cmd(), file(), service(), install()
 
 Log the output of commands as they happen
 
@@ -26,6 +26,28 @@ Put minion / api code in it's own branch - focus on ssh
 Need a tmpdir for little files 'n things for the currently executing script
 
 CTRL-C doesn't seem to work well
+
+patched.pl generate bundle
+
+Deploy to a host with a single file (perhaps par packed)
+
+Log prior state and ending state
+
+Possibly a host() sub for Patched::Minimal
+
+    host("local.box", sub {
+        my $self = shift;
+
+        ssh($ARGV[0])->run("-");
+
+        exit;
+    });
+
+    The goal is to be able to simply run an adhoc script onto one or more boxen
+
+Add support for __DATA__ templates and config files
+
+Should Patched::User::upsert die if existing user doesn't match passed in criteria?
 
 Modules
 -------
@@ -76,8 +98,8 @@ File
     * Append
     * Contains
     ReplaceAfterALine
-    CommentLine
-    CommentLines
+    * CommentLine
+    * CommentLines
 Files (a set)
     Delete
     Move

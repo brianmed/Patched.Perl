@@ -59,7 +59,17 @@ sub add ($this, $opts) {
 
     Patched::Log->info("Adding user: " . $this->uname);
 
-    return Patched::Command->new(cmd => $adduser, args => $args)->run->success;
+    unless (my $cmd = Patched::Command->new(cmd => $adduser, args => $args)->run->success) {
+        die(sprintf("%s not addeded %s", $this->uname, $cmd->stderr));
+    }
+
+    return $this;
+}
+
+sub upsert ($this, $opts) {
+    return $this if $this->exists;
+
+    return $this->add($opts);
 }
 
 sub del ($this, $opts) {

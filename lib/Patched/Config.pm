@@ -11,9 +11,14 @@ use FindBin;
 use experimental qw(signatures);
 
 has 'path' => (is => 'ro', isa => 'Str');
+has 'str' => (is => 'ro', isa => 'Str');
 
 ## A lot from Mojolicious::Plugin::Config;
 sub parse ($this) {
+    if ($this->str) {
+        return $this->_parse(decode('UTF-8', $this->str), "this->str");
+    }
+    
     my $file = $this->path;
 
     my $path = "$FindBin::Bin/$file";

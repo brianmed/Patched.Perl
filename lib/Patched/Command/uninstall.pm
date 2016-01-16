@@ -1,8 +1,8 @@
-package Patched::Command::patched::uninstall;
-
-use autodie;
+package Patched::Command::uninstall;
 
 use Mojo::Base 'Mojolicious::Command';
+
+use autodie;
 
 use Getopt::Long qw(GetOptionsFromArray :config no_auto_abbrev no_ignore_case);
 use Mojo::Date;
